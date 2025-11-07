@@ -30,7 +30,7 @@ func NewConnectionInfo(ns string, restCfg rest.Config) kubernetes.ConnectionInfo
 
 func NewConfig(podName string, target map[any]any) (*config.ProfilerConfig, error) {
 	return config.NewProfilerConfig(&config.TargetConfig{
-		Namespace:            "",
+		Namespace:            target["namespace"].(string),
 		PodName:              podName,
 		ContainerName:        "",
 		LabelSelector:        "",
