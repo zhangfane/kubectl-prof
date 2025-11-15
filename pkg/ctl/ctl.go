@@ -19,11 +19,11 @@ func NewProfiler(connectionInfo kubernetes.ConnectionInfo) *profiler.Profiler {
 	)
 	return jobProfiler
 }
-func NewConnectionInfo(ns string, restCfg rest.Config) kubernetes.ConnectionInfo {
+func NewConnectionInfo(ns string, restCfg *rest.Config) kubernetes.ConnectionInfo {
 
 	return kubernetes.ConnectionInfo{
-		ClientSet:  clientgo.NewForConfigOrDie(&restCfg),
-		RestConfig: &restCfg,
+		ClientSet:  clientgo.NewForConfigOrDie(restCfg),
+		RestConfig: restCfg,
 		Namespace:  ns,
 	}
 }

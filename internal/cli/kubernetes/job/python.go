@@ -10,7 +10,6 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/uuid"
 )
 
 type pythonCreator struct{}
@@ -18,7 +17,6 @@ type pythonCreator struct{}
 var pythonDefaultCapabilities = []apiv1.Capability{"SYS_PTRACE"}
 
 func (p *pythonCreator) Create(targetPod *apiv1.Pod, cfg *config.ProfilerConfig) (string, *batchv1.Job, error) {
-	id := string(uuid.NewUUID())
 	imageName := p.getImageName(cfg.Target)
 
 	var imagePullSecret []apiv1.LocalObjectReference
@@ -31,7 +29,7 @@ func (p *pythonCreator) Create(targetPod *apiv1.Pod, cfg *config.ProfilerConfig)
 		capabilities = pythonDefaultCapabilities
 	}
 
-	commonMeta := p.getObjectMeta(id, cfg)
+	commonMeta := p.getObjectMeta(cfg.Target, cfg)
 
 	resources, err := cfg.Job.ToResourceRequirements()
 	if err != nil {
@@ -39,10 +37,10 @@ func (p *pythonCreator) Create(targetPod *apiv1.Pod, cfg *config.ProfilerConfig)
 	}
 
 	job := &batchv1.Job{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "JobConfig",
-			APIVersion: "batch/v1",
-		},
+		//TypeMeta: metav1.TypeMeta{
+		//	Kind:       "JobConfig",
+		//	APIVersion: "batch/v1",
+		//},
 		ObjectMeta: commonMeta,
 		Spec: batchv1.JobSpec{
 			Parallelism:             int32Ptr(1),
@@ -72,7 +70,7 @@ func (p *pythonCreator) Create(targetPod *apiv1.Pod, cfg *config.ProfilerConfig)
 							Name:            ContainerName,
 							Image:           imageName,
 							Command:         []string{command},
-							Args:            kubernetes.GetArgs(targetPod, cfg, id),
+							Args:            kubernetes.GetArgs(targetPod, cfg, commonMeta.Name),
 							VolumeMounts: []apiv1.VolumeMount{
 								{
 									Name:      "target-filesystem",
@@ -98,8 +96,7 @@ func (p *pythonCreator) Create(targetPod *apiv1.Pod, cfg *config.ProfilerConfig)
 	if cfg.Target.ServiceAccountName != "" {
 		job.Spec.Template.Spec.ServiceAccountName = cfg.Target.ServiceAccountName
 	}
-
-	return id, job, nil
+	return commonMeta.Name, job, nil
 }
 
 // getImageName if image name is provider from config.TargetConfig this one is returned otherwise a new one is built
@@ -113,12 +110,14 @@ func (p *pythonCreator) getImageName(t *config.TargetConfig) string {
 	return imageName
 }
 
-func (p *pythonCreator) getObjectMeta(id string, cfg *config.ProfilerConfig) metav1.ObjectMeta {
+func (p *pythonCreator) getObjectMeta(target *config.TargetConfig, cfg *config.ProfilerConfig) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
-		Name:      fmt.Sprintf("%s-python-%s", ContainerName, id),
+		Name:      fmt.Sprintf("%s-profile-%s", target.ContainerName, target.OutputType),
 		Namespace: cfg.Job.Namespace,
 		Labels: map[string]string{
-			LabelID: id,
+			"pod":     target.PodName,
+			"app":     target.ContainerName,
+			"profile": string(target.OutputType),
 		},
 		Annotations: map[string]string{
 			"sidecar.istio.io/inject": "false",

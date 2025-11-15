@@ -17,7 +17,7 @@ type TargetConfig struct {
 	Event                api.ProfilingEvent
 	Duration             time.Duration
 	Interval             time.Duration
-	Id                   string
+	Id                   string //job name
 	LocalPath            string
 	Alpine               bool
 	DryRun               bool
