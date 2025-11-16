@@ -43,7 +43,6 @@ func (h *EventHandler) Handle(events chan string, done chan bool, resultFile cha
 			h.printer.Print(fmt.Sprintf("⚠️ %s\n", eventType.Msg))
 			h.printer.Print("Profiling ... 🔬\n")
 		default:
-			h.printer.Print(fmt.Sprintf("Unknown event : %s\n", eventString))
 		}
 	}
 }
