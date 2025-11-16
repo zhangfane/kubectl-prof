@@ -68,6 +68,7 @@ func (p *profilingContainerApi) HandleProfilingContainerLogs(pod *v1.Pod, contai
 
 	readCloser, err := req.Stream(ctx)
 	if err != nil {
+		log.Errorf("error getting logs from pod %s/%s: %s", pod.Namespace, pod.Name, err)
 		return nil, nil, err
 	}
 
@@ -90,6 +91,7 @@ func (p *profilingContainerApi) HandleProfilingContainerLogs(pod *v1.Pod, contai
 			if err != nil {
 				return
 			}
+			log.Infof("Profiling container log: %s", bytes)
 			eventsChan <- string(bytes)
 		}
 	}()

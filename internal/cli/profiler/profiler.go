@@ -103,17 +103,21 @@ func (p *Profiler) profileTarget(ctx context.Context, targetPod *v1.Pod, printer
 	if cfg.Target.DryRun {
 		return nil
 	}
+	printer.Print("debug profiler 1 ... 🚀\n")
 
 	cfg.Target.Id = profileId
 	profilingPod, err := p.profilingJobApi.GetProfilingPod(cfg, ctx, 5*time.Minute)
 	if err != nil {
+		printer.Print(fmt.Sprintf("GetProfilingPod failed:%s ...", err.Error()))
 		return err
 	}
+	printer.Print("debug profiler 2... 🚀\n")
 
 	eventHandler := handler.NewEventHandler(cfg.Target, printer)
 	done, resultFile, err := p.profilingContainerApi.HandleProfilingContainerLogs(profilingPod,
 		p.profilingJobApi.GetProfilingContainerName(), eventHandler, ctx)
 	if err != nil {
+		printer.Print(fmt.Sprintf("HandleProfilingContainerLogs failed:%s ...", err.Error()))
 		return err
 	}
 

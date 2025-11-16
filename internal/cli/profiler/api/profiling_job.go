@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"time"
 
@@ -78,14 +77,28 @@ func (p *profilingJobApi) GetProfilingPod(cfg *config.ProfilerConfig, ctx contex
 	var pod *v1.Pod
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+	labelSelector := &metav1.LabelSelector{MatchLabels: map[string]string{
+		"pod":     cfg.Target.PodName,
+		"app":     cfg.Target.ContainerName,
+		"profile": string(cfg.Target.OutputType),
+	}}
+	selector, err := metav1.LabelSelectorAsSelector(labelSelector)
+	if err != nil {
+		return nil, err
+	}
 
-	err := wait.PollUntilContextTimeout(ctx, 1*time.Second, timeout, true,
+	err = wait.PollUntilContextTimeout(ctx, 1*time.Second, timeout, true,
 		func(ctx context.Context) (bool, error) {
 			podList, err := p.connectionInfo.ClientSet.
 				CoreV1().
 				Pods(cfg.Job.Namespace).
 				List(ctx, metav1.ListOptions{
-					LabelSelector: fmt.Sprintf("%s=%s", job.LabelID, cfg.Target.Id),
+					//"pod":     target.PodName,
+					//"app":     target.ContainerName,
+					//"profile": string(target.OutputType),
+					//
+
+					LabelSelector: selector.String(),
 				})
 
 			if err != nil {
@@ -110,6 +123,7 @@ func (p *profilingJobApi) GetProfilingPod(cfg *config.ProfilerConfig, ctx contex
 		})
 
 	if err != nil {
+
 		return nil, err
 	}
 

@@ -39,7 +39,7 @@ func NewConfig(podName string, target map[any]any) (*config.ProfilerConfig, erro
 		Duration:             time.Minute,
 		Interval:             0,
 		Id:                   "",
-		LocalPath:            "./",
+		LocalPath:            "/mnt/",
 		Alpine:               false,
 		DryRun:               false,
 		Image:                "registry.cn-hangzhou.aliyuncs.com/zfane/kubectl-prof:v1.7.0-dev-python",
